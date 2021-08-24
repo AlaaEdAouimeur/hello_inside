@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hello_inside_task/data/models/entry.dart';
+import 'package:hello_inside_task/screens/home_screen/chart_view.dart';
 import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hello_inside_task/screens/home_screen/grouped_view.dart';
+import 'package:hello_inside_task/screens/home_screen/spikes_view.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,25 +19,56 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  Widget _renderItem(Entry e) => Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ExpansionTile(
-        subtitle: Text(e.getPercentage.toString() + ' %'),
-        title: Text(DateFormat('EEE, M/d/y').format(e.day)),
-        leading: Text(e.countSpikes.length.toString()),
-        children: e.countSpikes
-            .map((e) => ListTile(
-                  leading: Text(DateFormat(DateFormat.HOUR24_MINUTE)
-                      .format(e.dateTimeRange.start)),
-                  trailing: Text(e.spikeValue.toString()),
-                ))
-            .toList(),
-      ));
-
+  int _index = 0;
+  PageController _pageController = PageController(initialPage: 0);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: BlocConsumer<SensorCubit, SensorState>(
+      body: IndexedStack(
+        index: _index,
+        children: [GroupedView(), SpikesView(), ChartView()],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) => setState(() => _index = index),
+        currentIndex: _index,
+        items: [
+          BottomNavigationBarItem(
+            label: 'Grouped view',
+            icon: Icon(
+              Icons.list,
+            ),
+          ),
+          BottomNavigationBarItem(
+            label: 'Spikes view',
+            icon: Icon(
+              Icons.warning,
+            ),
+          ),
+          BottomNavigationBarItem(
+            label: 'Charts view',
+            icon: Icon(
+              Icons.add_chart,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+/*GroupedListView<dynamic, String>(
+        elements: entries.entries,
+        groupBy: (element) => DateFormat('EEE, M/d/y').format(element.date),
+        groupSeparatorBuilder: (String groupByValue) => Text(
+          groupByValue,
+          style: TextStyle(fontSize: 25),
+        ),
+        itemBuilder: (context, dynamic element) => _renderItem(element),
+
+        useStickyGroupSeparators: true, // optional
+        floatingHeader: true, // optional
+      ),*/
+
+      /* BlocConsumer<SensorCubit, SensorState>(
       listener: (context, state) {
         // TODO: implement listener
       },
@@ -54,18 +86,4 @@ class _HomeScreenState extends State<HomeScreen> {
         else
           return Text('idle');
       },
-    ));
-  }
-}
-/*GroupedListView<dynamic, String>(
-        elements: entries.entries,
-        groupBy: (element) => DateFormat('EEE, M/d/y').format(element.date),
-        groupSeparatorBuilder: (String groupByValue) => Text(
-          groupByValue,
-          style: TextStyle(fontSize: 25),
-        ),
-        itemBuilder: (context, dynamic element) => _renderItem(element),
-
-        useStickyGroupSeparators: true, // optional
-        floatingHeader: true, // optional
-      ),*/
+    ));*/

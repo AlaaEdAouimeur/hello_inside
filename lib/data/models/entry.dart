@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hello_inside_task/data/models/measurement.dart';
@@ -30,8 +28,9 @@ class Entry {
     );
   }
   int get getPercentage =>
-      (measurements.where((element) => element.isOutOfRange).length /
-              measurements.length)
+      ((measurements.where((element) => !element.isOutOfRange).length /
+                  measurements.length) *
+              100)
           .round();
 
   List<Spike> get countSpikes {

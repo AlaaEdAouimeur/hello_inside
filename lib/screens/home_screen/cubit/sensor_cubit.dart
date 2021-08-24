@@ -8,7 +8,6 @@ part 'sensor_state.dart';
 class SensorCubit extends Cubit<SensorState> {
   SensorRepository sensorRepository = SensorRepository();
   SensorCubit() : super(SensorInitial());
-
   Future<void> loadSensorData() async {
     try {
       emit(SensorLoading());
