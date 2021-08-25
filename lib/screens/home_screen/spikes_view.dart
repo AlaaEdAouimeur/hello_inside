@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hello_inside_task/data/models/entry.dart';
 import 'package:hello_inside_task/data/models/sensor_data.dart';
-import 'package:hello_inside_task/utils/extensions.dart';
 import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
+import 'package:hello_inside_task/utils/extensions.dart';
 
 class SpikesView extends StatefulWidget {
   @override
@@ -13,10 +13,7 @@ class SpikesView extends StatefulWidget {
 class _SpikesViewState extends State<SpikesView> {
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SensorCubit, SensorState>(
-      listener: (context, state) {
-        // TODO: implement listener
-      },
+    return BlocBuilder<SensorCubit, SensorState>(
       builder: (context, state) {
         if (state is SensorLoading)
           return _buildLoading();

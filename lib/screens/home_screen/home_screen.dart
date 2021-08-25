@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'package:hello_inside_task/screens/home_screen/chart_view.dart';
-import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
 import 'package:hello_inside_task/screens/home_screen/grouped_view.dart';
 import 'package:hello_inside_task/screens/home_screen/spikes_view.dart';
 

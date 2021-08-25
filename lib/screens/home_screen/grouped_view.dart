@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grouped_list/grouped_list.dart';
+
 import 'package:hello_inside_task/data/models/measurement.dart';
 import 'package:hello_inside_task/data/models/sensor_data.dart';
 import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
+
 import 'package:hello_inside_task/utils/extensions.dart';
 
 class GroupedView extends StatefulWidget {
@@ -14,10 +16,7 @@ class GroupedView extends StatefulWidget {
 class _GroupedViewState extends State<GroupedView> {
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SensorCubit, SensorState>(
-      listener: (context, state) {
-        // TODO: implement listener
-      },
+    return BlocBuilder<SensorCubit, SensorState>(
       builder: (context, state) {
         if (state is SensorLoading)
           return _buildLoading();

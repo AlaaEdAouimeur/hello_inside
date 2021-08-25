@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:hello_inside_task/data/models/entry.dart';
 import 'package:hello_inside_task/data/models/measurement.dart';
 import 'package:hello_inside_task/data/models/sensor_data.dart';
@@ -17,16 +18,13 @@ class ChartViewState extends State<ChartView> {
   int _pickedEntryIndex = 0;
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SensorCubit, SensorState>(
-      listener: (context, state) {
-        // TODO: implement listener
-      },
+    return BlocBuilder<SensorCubit, SensorState>(
       builder: (context, state) {
         if (state is SensorLoading)
           return _buildLoading();
-        else if (state is SensorLoaded) {
+        else if (state is SensorLoaded)
           return _buildLoadedData(state.sensorData);
-        } else if (state is SensorError)
+        else if (state is SensorError)
           return _buildError(state.message);
         else
           return Container();
@@ -62,6 +60,7 @@ class ChartViewState extends State<ChartView> {
           ),
           primaryYAxis: NumericAxis(
             plotBands: [
+              //low and high ranges
               PlotBand(
                   dashArray: [10, 10],
                   textAngle: 0,
