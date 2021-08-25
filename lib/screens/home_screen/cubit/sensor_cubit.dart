@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:hello_inside_task/data/models/sensor_data.dart';
 import 'package:hello_inside_task/data/repositories/sensor_repository.dart';
 import 'package:meta/meta.dart';
