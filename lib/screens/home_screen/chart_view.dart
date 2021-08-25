@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:grouped_list/grouped_list.dart';
 import 'package:hello_inside_task/data/models/entry.dart';
 import 'package:hello_inside_task/data/models/measurement.dart';
 import 'package:hello_inside_task/data/models/sensor_data.dart';
 import 'package:hello_inside_task/screens/home_screen/cubit/sensor_cubit.dart';
-import 'package:hello_inside_task/utils/app_colors.dart';
-import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_charts/charts.dart' hide CornerStyle;
 import 'package:hello_inside_task/utils/extensions.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class ChartView extends StatefulWidget {
   @override
@@ -16,6 +14,7 @@ class ChartView extends StatefulWidget {
 }
 
 class ChartViewState extends State<ChartView> {
+  int _pickedEntryIndex = 0;
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SensorCubit, SensorState>(
@@ -26,7 +25,7 @@ class ChartViewState extends State<ChartView> {
         if (state is SensorLoading)
           return _buildLoading();
         else if (state is SensorLoaded) {
-          return _buildLoadedData(state.sensorData.entries[0]);
+          return _buildLoadedData(state.sensorData);
         } else if (state is SensorError)
           return _buildError(state.message);
         else
@@ -35,44 +34,140 @@ class ChartViewState extends State<ChartView> {
     );
   }
 
-  Widget _buildLoadedData(Entry entry) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height / 3,
-            width: MediaQuery.of(context).size.width - 20,
-            child: SfCartesianChart(
-              zoomPanBehavior: ZoomPanBehavior(
-                enablePinching: true,
-                enablePanning: true,
-              ),
-              plotAreaBorderWidth: 0,
-              primaryXAxis: DateTimeAxis(
-                intervalType: DateTimeIntervalType.minutes,
-                majorGridLines: const MajorGridLines(width: 0),
-              ),
-              primaryYAxis: NumericAxis(
-                minimum: 50,
-                maximum: 150,
-                interval: 50,
-                axisLine: const AxisLine(width: 0),
-                labelFormat: '{value}mg/dL',
-                majorTickLines: const MajorTickLines(size: 0),
-              ),
-              series: _getStuf(entry),
-            ),
-          )
-        ],
+  Widget _buildLoadedData(SensorData sensorData) {
+    final entry = sensorData.entries[_pickedEntryIndex];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(flex: 2, child: _buildCharts(entry)),
+        _entryPickerWidget(sensorData),
+        Expanded(flex: 2, child: _buildRangeGauge(entry))
+      ],
+    );
+  }
+
+  Widget _buildCharts(Entry entry) => Container(
+        child: SfCartesianChart(
+          zoomPanBehavior: ZoomPanBehavior(
+            enablePinching: true,
+            enablePanning: true,
+            maximumZoomLevel: 0.5,
+          ),
+          onZooming: (arg) => print(arg),
+          plotAreaBorderWidth: 0,
+          primaryXAxis: DateTimeAxis(
+            intervalType: DateTimeIntervalType.hours,
+            majorGridLines: const MajorGridLines(width: 0),
+          ),
+          primaryYAxis: NumericAxis(
+            plotBands: [
+              PlotBand(
+                  dashArray: [10, 10],
+                  textAngle: 0,
+                  start: 80,
+                  end: 80,
+                  textStyle: TextStyle(color: Colors.deepOrange, fontSize: 16),
+                  borderColor: Colors.red,
+                  borderWidth: 2),
+              PlotBand(
+                  dashArray: [10, 10],
+                  textAngle: 0,
+                  start: 110,
+                  end: 110,
+                  textStyle: TextStyle(color: Colors.deepOrange, fontSize: 16),
+                  borderColor: Colors.red,
+                  borderWidth: 2),
+            ],
+            minimum: 50,
+            maximum: 140,
+            interval: 30,
+            axisLine: const AxisLine(width: 0),
+            labelFormat: '{value}mg/dL',
+            majorTickLines: const MajorTickLines(size: 0),
+          ),
+          series: _getSplineLines(entry),
+        ),
       );
-  List<SplineSeries<Measurement, DateTime>> _getStuf(Entry entry) {
+  Widget _entryPickerWidget(SensorData sensorData) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          onPressed: _pickedEntryIndex != 0
+              ? () => setState(() => _pickedEntryIndex--)
+              : null,
+          icon: Icon(Icons.arrow_back_ios),
+        ),
+        Text(sensorData.entries[_pickedEntryIndex].day.toDay),
+        IconButton(
+          onPressed: sensorData.entries.length - 1 != _pickedEntryIndex
+              ? () => setState(() => _pickedEntryIndex++)
+              : null,
+          icon: Icon(Icons.arrow_forward_ios),
+        ),
+      ],
+    );
+  }
+
+  List<SplineSeries<Measurement, DateTime>> _getSplineLines(Entry entry) {
     return [
       SplineSeries(
-          dataSource: entry.measurements,
-          xValueMapper: (Measurement m, _) => m.date,
-          yValueMapper: (Measurement m, _) => m.value,
-          pointColorMapper: (Measurement m, _) =>
-              m.isOutOfRange ? Colors.red : Colors.blue)
+        pointColorMapper: (Measurement m, index) => entry.countSpikes
+                .where((element) => element.spikeRange.contains(index))
+                .isNotEmpty
+            ? Colors.red
+            : Colors.blue,
+        dataSource: entry.measurements,
+        xValueMapper: (Measurement m, _) => m.date,
+        yValueMapper: (Measurement m, _) => m.value,
+      )
     ];
+  }
+
+  Widget _buildRangeGauge(Entry entry) {
+    return SfRadialGauge(
+      enableLoadingAnimation: true,
+      axes: <RadialAxis>[
+        RadialAxis(
+            showLabels: false,
+            endAngle: 270,
+            startAngle: 270,
+            showTicks: false,
+            radiusFactor: 0.8,
+            minimum: 0,
+            maximum: 100,
+            axisLineStyle: AxisLineStyle(
+                cornerStyle: CornerStyle.startCurve, thickness: 5),
+            annotations: <GaugeAnnotation>[
+              GaugeAnnotation(
+                angle: 90,
+                positionFactor: 0,
+                widget: Center(
+                  child: Text(entry.getPercentage.toString() + "% in Range",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          TextStyle(fontStyle: FontStyle.italic, fontSize: 22)),
+                ),
+              ),
+            ],
+            pointers: <GaugePointer>[
+              RangePointer(
+                animationType: AnimationType.ease,
+                value: entry.getPercentage.toDouble(),
+                width: 18,
+                enableAnimation: true,
+                pointerOffset: -6,
+                cornerStyle: CornerStyle.endCurve,
+                color: const Color(0xFFF67280),
+                gradient: const SweepGradient(
+                    colors: <Color>[Colors.lightBlueAccent, Colors.greenAccent],
+                    stops: <double>[0.25, 0.75]),
+              ),
+            ]),
+      ],
+    );
   }
 
   Widget _buildLoading() => Center(
@@ -84,95 +179,3 @@ class ChartViewState extends State<ChartView> {
         child: Text(error),
       );
 }
-/*  Widget _buildLoadedData(Entry entry) {
-    List<FlSpot> fls = entry.measurements
-        .map(
-            (e) => FlSpot(e.date.toChartMinutes.toDouble(), e.value.toDouble()))
-        .toList();
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          color: Colors.blueGrey,
-          height: MediaQuery.of(context).size.height / 2,
-          width: MediaQuery.of(context).size.width,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: LineChart(
-              
-              LineChartData(
-                
-                  maxX: 1440,
-                  maxY: 180,
-                  extraLinesData: ExtraLinesData(
-                    horizontalLines: [
-                      HorizontalLine(y: 80, color: Colors.amber),
-                      HorizontalLine(y: 110, color: Colors.amber)
-                    ],  
-                  ),
-                  axisTitleData:
-                      FlAxisTitleData(leftTitle: AxisTitle(titleText: 'dsd')),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: SideTitles(
-                      showTitles: true,
-                      getTitles: (val) {
-                        switch (val.toInt()) {
-                          case 0:
-                            return '0am';
-                          case 360:
-                            return '6am';
-                          case 720:
-                            return '12am';
-                          case 1080:
-                            return '6pm';
-                          case 1440:
-                            return '12am';
-                          default:
-                            return '';
-                        }
-                      },
-                    ),
-                    leftTitles: SideTitles(
-                      getTitles: (val) {
-                        print(val);
-                        switch (val.toInt()) {
-                          case 110:
-                            return '110';
-                          case 80:
-                            return '80';
-                          case 200:
-                            return '200';
-                          case 50:
-                            return '50';
-
-                          default:
-                            return '';
-                        }
-                      },
-                      showTitles: true,
-                      margin: 8,
-                      reservedSize: 30,
-                      getTextStyles: (context, value) => const TextStyle(
-                        color: Color(0xff75729e),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  backgroundColor: Colors.blueGrey,
-                  lineBarsData: [LineChartBarData(spots: fls, isCurved: true)]),
-
-              swapAnimationDuration: Duration(milliseconds: 150), // Optional
-              swapAnimationCurve: Curves.linear, // Optional
-            ),
-          ),
-        ),
-        Expanded(
-            child: Container(
-          color: Colors.red,
-          child: Container(),
-        ))
-      ],
-    );
-  }*/

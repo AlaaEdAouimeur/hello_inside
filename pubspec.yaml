@@ -32,6 +32,7 @@ dependencies:
   grouped_list: ^4.1.0
   intl: ^0.17.0
   syncfusion_flutter_charts: ^19.2.57
+  syncfusion_flutter_gauges: ^19.2.57
 
 dev_dependencies:
   flutter_test:

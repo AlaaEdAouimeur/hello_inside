@@ -39,6 +39,7 @@ class _GroupedViewState extends State<GroupedView> {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             groupByValue,
+            softWrap: true,
             style: TextStyle(fontSize: 25),
           ),
         ),

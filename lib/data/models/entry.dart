@@ -38,15 +38,24 @@ class Entry {
     measurements.forEachIndexed((index, element) {
       if (element.value > 110) {
         DateTime from = element.date.subtract(Duration(minutes: 15));
+        int fromindex = 0;
 
-        Measurement _m = measurements.firstWhere(
+        Measurement _m = measurements.firstWhereIndexedOrNull((index, element) {
+              fromindex = index;
+              return element.date.isAfter(from) ||
+                  element.date.isAtSameMomentAs(from);
+            }) ??
+            measurements.first;
+        measurements.firstWhere(
             (m) => m.date.isAfter(from) || m.date.isAtSameMomentAs(from),
             orElse: () => measurements.first);
-
         if (element.value - _m.value >= 20) {
-          _spikes.add(Spike(
-              dateTimeRange: DateTimeRange(start: _m.date, end: element.date),
-              spikeValue: element.value - _m.value));
+          _spikes.add(
+            Spike(
+                dateTimeRange: DateTimeRange(start: _m.date, end: element.date),
+                spikeValue: element.value - _m.value,
+                spikeRange: [fromindex, index]),
+          );
         }
       }
     });
