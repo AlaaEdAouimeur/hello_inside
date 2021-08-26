@@ -1,4 +1,4 @@
-# hello_inside_task
+# hello_inside
 
 A new Flutter project.
 
